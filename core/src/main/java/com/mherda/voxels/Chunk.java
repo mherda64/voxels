@@ -1,10 +1,31 @@
 package com.mherda.voxels;
 
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Mesh;
+import com.badlogic.gdx.graphics.VertexAttribute;
+import com.badlogic.gdx.graphics.g3d.Material;
+import com.badlogic.gdx.graphics.g3d.Renderable;
+import com.badlogic.gdx.graphics.g3d.RenderableProvider;
+import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.Pool;
 
-public class Chunk {
+public class Chunk implements RenderableProvider {
+
+    private final int VERTEX_SIZE = 6;
 
     final VoxelType[] voxels;
+
+    final float[] vertices;
+    int recentVerticesCount = 0;
+
+    final Mesh mesh;
+
+    final Material material;
+
+    boolean dirty = true;
 
     final int sX;
     final int sY;
@@ -27,13 +48,47 @@ public class Chunk {
         this.offset = offset;
 
         voxels = new VoxelType[sX * sY * sZ];
+        for (int i = 0; i < sX * sY * sZ; i++) {
+            voxels[i] = VoxelType.NONE;
+        }
 
         nextTopOffset = sX * sZ;
         nextBottomOffset = -sX * sZ;
-        nextFrontOffset = sX;
-        nextBackOffset = -sX;
+        nextFrontOffset = -sX;
+        nextBackOffset = sX;
         nextLeftOffset = -1;
         nextRightOffset = 1;
+
+        material = new Material(new ColorAttribute(ColorAttribute.Diffuse,
+            MathUtils.random(0.5f, 1f),
+            MathUtils.random(0.5f, 1f),
+            MathUtils.random(0.5f, 1f), 1)
+        );
+
+        // Create indicies for the chunk mesh
+        int len = sX * sY * sZ * VERTEX_SIZE * 2;
+        short[] indices = new short[len];
+        int i = 0;
+        short j = 0;
+        for (i = 0; i < len; i += 6, j += 4) {
+            // First triangle
+            indices[i] = j;
+            indices[i + 1] = (short) (j + 1);
+            indices[i + 2] = (short) (j + 2);
+            // Second triangle
+            indices[i + 3] = (short) (j + 2);
+            indices[i + 4] = (short) (j + 3);
+            indices[i + 5] = j;
+        }
+
+        mesh = new Mesh(true,
+            sX * sY * sZ * 6 * 4,
+            sX * sY * sZ * 36 / 3,
+            VertexAttribute.Position(),
+            VertexAttribute.Normal());
+
+//        4 Vertices, 6 faces, x * y * z blocks
+        vertices = new float[VERTEX_SIZE * 4 * 6 * sX * sY * sZ];
     }
 
     public VoxelType get(int x, int y, int z) {
@@ -58,6 +113,10 @@ public class Chunk {
         voxels[x + z * sX + y * widthTimesHeight] = type;
     }
 
+    public boolean isDirty() {
+        return dirty;
+    }
+
     public int calculateVertices(float[] vertices) {
         int voxelIndex = 0;
         int vertexOffset = 0;
@@ -66,54 +125,49 @@ public class Chunk {
                 for (int x = 0; x < sX; x++, voxelIndex++) {
                     if (voxels[voxelIndex].isNone()) continue;
 
-                    if (y < sY - 1) {
-                        if (voxels[voxelIndex + nextTopOffset].isNone())
-                            vertexOffset = createTop(x, y, z, offset, vertices, vertexOffset);
-                    } else
-                        vertexOffset = createTop(x, y, z, offset, vertices, vertexOffset);
-
                     if (y > 0) {
                         if (voxels[voxelIndex + nextBottomOffset].isNone())
                             vertexOffset = createBottom(x, y, z, offset, vertices, vertexOffset);
                     } else
                         vertexOffset = createBottom(x, y, z, offset, vertices, vertexOffset);
 
-                    if (x < sX - 1) {
-                        if (voxels[voxelIndex + nextRightOffset].isNone()) {
-//                            createRight()
-                        }
-                    } else {
-//                        createRight
-                    }
+
+                    if (y < sY - 1) {
+                        if (voxels[voxelIndex + nextTopOffset].isNone())
+                            vertexOffset = createTop(x, y, z, offset, vertices, vertexOffset);
+                    } else
+                        vertexOffset = createTop(x, y, z, offset, vertices, vertexOffset);
 
                     if (x > 0) {
-                        if (voxels[voxelIndex + nextLeftOffset].isNone()) {
-//                            createLeft()
-                        }
-                    } else {
-//                        createLeft()
-                    }
+                        if (voxels[voxelIndex + nextLeftOffset].isNone())
+                            vertexOffset = createLeft(x, y, z, offset, vertices, vertexOffset);
+                    } else
+                        vertexOffset = createLeft(x, y, z, offset, vertices, vertexOffset);
 
-                    if (z < sZ - 1) {
-                        if (voxels[voxelIndex + nextBackOffset].isNone()) {
-//                            createBack()
-                        }
-                    } else {
-//                        createBack()
-                    }
+
+                    if (x < sX - 1) {
+                        if (voxels[voxelIndex + nextRightOffset].isNone())
+                            vertexOffset = createRight(x, y, z, offset, vertices, vertexOffset);
+                    } else
+                        vertexOffset = createRight(x, y, z, offset, vertices, vertexOffset);
 
                     if (z > 0) {
                         if (voxels[voxelIndex + nextFrontOffset].isNone()) {
-//                            createFront()
+                            vertexOffset = createFront(x, y, z, offset, vertices, vertexOffset);
                         }
-                    } else {
-//                        createFront()
-                    }
+                    } else
+                        vertexOffset = createFront(x, y, z, offset, vertices, vertexOffset);
+
+                    if (z < sZ - 1) {
+                        if (voxels[voxelIndex + nextBackOffset].isNone())
+                            vertexOffset = createBack(x, y, z, offset, vertices, vertexOffset);
+                    } else
+                        vertexOffset = createBack(x, y, z, offset, vertices, vertexOffset);
                 }
             }
         }
 
-        return 0;
+        return vertexOffset / VERTEX_SIZE;
     }
 
     private int createTop(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
@@ -176,5 +230,148 @@ public class Chunk {
         vertices[vertexOffset++] = -1;
         vertices[vertexOffset++] = 0;
         return vertexOffset;
+    }
+
+    public static int createLeft(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = -1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = -1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = -1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = -1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        return vertexOffset;
+    }
+
+    public static int createRight(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        return vertexOffset;
+    }
+
+    public static int createFront(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 1;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 1;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 1;
+
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 1;
+        return vertexOffset;
+    }
+
+    public static int createBack(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = -1;
+
+        vertices[vertexOffset++] = offset.x + x;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = -1;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y + 1;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = -1;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = -1;
+        return vertexOffset;
+    }
+
+    @Override
+    public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
+        if (isDirty()) {
+            recentVerticesCount = calculateVertices(vertices);
+            dirty = false;
+            mesh.setVertices(vertices);
+        }
+
+        if (recentVerticesCount != 0) {
+            Renderable renderable = pool.obtain();
+            renderable.material = material;
+            renderable.meshPart.mesh = mesh;
+            renderable.meshPart.offset = 0;
+            renderable.meshPart.size = recentVerticesCount / 4 * VERTEX_SIZE;
+            renderable.meshPart.primitiveType = GL20.GL_TRIANGLES;
+            renderables.add(renderable);
+        }
     }
 }
