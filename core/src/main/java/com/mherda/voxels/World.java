@@ -9,18 +9,16 @@ import com.badlogic.gdx.utils.Array;
 public class World {
 
     private final int CHUNK_WIDTH = 16;
-    private final int CHUNK_HEIGHT = 64;
+    private final int CHUNK_HEIGHT = 16;
 
     Chunk chunk;
 
     public World() {
-        chunk = new Chunk(CHUNK_WIDTH, CHUNK_WIDTH, CHUNK_HEIGHT, new Vector3());
+        chunk = new Chunk(CHUNK_WIDTH, CHUNK_WIDTH, CHUNK_HEIGHT, new Vector3(0f, 0f, 0f));
     }
 
-    public Array<RenderableProvider> getRenderable() {
-        Array<RenderableProvider> renderable = new Array();
-        renderable.add(chunk);
-        return renderable;
+    public Chunk getChunk() {
+        return chunk;
     }
 
     public void randomize() {

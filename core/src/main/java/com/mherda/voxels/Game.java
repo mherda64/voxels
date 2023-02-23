@@ -48,7 +48,7 @@ public class Game extends ApplicationAdapter {
     public void render() {
         ScreenUtils.clear(0.0f, 0.3f, 0.6f, 1f, true);
         modelBatch.begin(camera);
-        modelBatch.render(world.getRenderable(), lights);
+        modelBatch.render(world.getChunk(), lights);
         modelBatch.end();
         controller.update();
     }

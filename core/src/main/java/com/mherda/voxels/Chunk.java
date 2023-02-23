@@ -1,5 +1,6 @@
 package com.mherda.voxels;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Mesh;
 import com.badlogic.gdx.graphics.VertexAttribute;
@@ -202,13 +203,6 @@ public class Chunk implements RenderableProvider {
     }
 
     private int createBottom(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
-        vertices[vertexOffset++] = offset.x + x + 1;
-        vertices[vertexOffset++] = offset.y + y;
-        vertices[vertexOffset++] = offset.z + z;
-        vertices[vertexOffset++] = 0;
-        vertices[vertexOffset++] = -1;
-        vertices[vertexOffset++] = 0;
-
         vertices[vertexOffset++] = offset.x + x;
         vertices[vertexOffset++] = offset.y + y;
         vertices[vertexOffset++] = offset.z + z;
@@ -226,6 +220,13 @@ public class Chunk implements RenderableProvider {
         vertices[vertexOffset++] = offset.x + x + 1;
         vertices[vertexOffset++] = offset.y + y;
         vertices[vertexOffset++] = offset.z + z + 1;
+        vertices[vertexOffset++] = 0;
+        vertices[vertexOffset++] = -1;
+        vertices[vertexOffset++] = 0;
+
+        vertices[vertexOffset++] = offset.x + x + 1;
+        vertices[vertexOffset++] = offset.y + y;
+        vertices[vertexOffset++] = offset.z + z;
         vertices[vertexOffset++] = 0;
         vertices[vertexOffset++] = -1;
         vertices[vertexOffset++] = 0;
@@ -360,8 +361,9 @@ public class Chunk implements RenderableProvider {
     public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
         if (isDirty()) {
             recentVerticesCount = calculateVertices(vertices);
+            Gdx.app.log("vertCount", String.valueOf(recentVerticesCount));
             dirty = false;
-            mesh.setVertices(vertices);
+            mesh.setVertices(vertices, 0, recentVerticesCount / 4 * 6 * VERTEX_SIZE);
         }
 
         if (recentVerticesCount != 0) {
@@ -369,7 +371,7 @@ public class Chunk implements RenderableProvider {
             renderable.material = material;
             renderable.meshPart.mesh = mesh;
             renderable.meshPart.offset = 0;
-            renderable.meshPart.size = recentVerticesCount / 4 * VERTEX_SIZE;
+            renderable.meshPart.size = recentVerticesCount / 4 * 6 * VERTEX_SIZE;
             renderable.meshPart.primitiveType = GL20.GL_TRIANGLES;
             renderables.add(renderable);
         }
