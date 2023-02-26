@@ -32,16 +32,33 @@ public class Game extends ApplicationAdapter {
         camera.near = 0.1f;
         camera.far = 500;
         controller = new FirstPersonCameraController(camera);
-        controller.setVelocity(50f);
+//        controller.setVelocity(50f);
         Gdx.input.setInputProcessor(controller);
 
         lights = new Environment();
         lights.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
-        lights.add(new DirectionalLight().set(1, 1, 1, 0, -1, 0));
+        lights.add(new DirectionalLight().set(1, 1, 1, -0.8f, 0, 0));
 
         world = new World();
-        world.randomize();
+        Chunk chunk = world.chunk;
 
+        for (int x = 0; x < 16; x++) {
+            for (int y = 0; y < 16; y++) {
+                for (int z = 0; z < 16; z++) {
+                    if (y == 0 || y == 15 || x == 0 || x == 15)
+                        chunk.set(x, y, z, VoxelType.BLOCK);
+                }
+            }
+        }
+//        world.randomize(512);
+
+//        for (int x = 15; x < 16; x++) {
+//            for (int y = 15; y < 16; y++) {
+//                for (int z = 15; z < 16; z++) {
+//                    world.chunk.set(x, y, z, VoxelType.BLOCK);
+//                }
+//            }
+//        }
     }
 
     @Override

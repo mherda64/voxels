@@ -83,10 +83,11 @@ public class Chunk implements RenderableProvider {
         }
 
         mesh = new Mesh(true,
-            sX * sY * sZ * 6 * 4,
-            sX * sY * sZ * 36 / 3,
+            sX * sY * sZ * VERTEX_SIZE * 4,
+            sX * sY * sZ * VERTEX_SIZE * 6 ,
             VertexAttribute.Position(),
             VertexAttribute.Normal());
+        mesh.setIndices(indices);
 
 //        4 Vertices, 6 faces, x * y * z blocks
         vertices = new float[VERTEX_SIZE * 4 * 6 * sX * sY * sZ];

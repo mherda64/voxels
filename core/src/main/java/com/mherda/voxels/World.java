@@ -1,9 +1,7 @@
 package com.mherda.voxels;
 
-import com.badlogic.gdx.graphics.g3d.Renderable;
-import com.badlogic.gdx.graphics.g3d.RenderableProvider;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
-import com.badlogic.gdx.utils.Array;
 
 
 public class World {
@@ -21,13 +19,14 @@ public class World {
         return chunk;
     }
 
-    public void randomize() {
-        for (int y = 0; y < 32; y++) {
-            for (int z = 0; z < 32; z++) {
-                for (int x = 0; x < 32; x++) {
-                    chunk.set(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, z % CHUNK_WIDTH, VoxelType.BLOCK);
-                }
-            }
+    public void randomize(int randomBlocks) {
+        for (int i = 0; i < randomBlocks; i++) {
+            chunk.set(
+                MathUtils.random(CHUNK_WIDTH - 1),
+                MathUtils.random(CHUNK_HEIGHT - 1),
+                MathUtils.random(CHUNK_WIDTH - 1),
+                VoxelType.BLOCK
+            );
         }
     }
 }
