@@ -20,6 +20,7 @@ public class Game extends ApplicationAdapter {
     FirstPersonCameraController controller;
 
     World world;
+    Chunk[] chunks;
 
     @Override
     public void create() {
@@ -32,46 +33,31 @@ public class Game extends ApplicationAdapter {
         camera.near = 0.1f;
         camera.far = 500;
         controller = new FirstPersonCameraController(camera);
-//        controller.setVelocity(50f);
+        controller.setVelocity(50f);
         Gdx.input.setInputProcessor(controller);
 
         lights = new Environment();
         lights.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
-        lights.add(new DirectionalLight().set(1, 1, 1, -0.8f, 0, 0));
+        lights.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -0.8f, 0, 0));
+        lights.add(new DirectionalLight().set(1, 1, 1, 0, -1f, 0));
 
         world = new World();
-        Chunk chunk = world.chunk;
-
-        for (int x = 0; x < 16; x++) {
-            for (int y = 0; y < 16; y++) {
-                for (int z = 0; z < 16; z++) {
-                    if (y == 0 || y == 15 || x == 0 || x == 15)
-                        chunk.set(x, y, z, VoxelType.BLOCK);
-                }
-            }
-        }
-//        world.randomize(512);
-
-//        for (int x = 15; x < 16; x++) {
-//            for (int y = 15; y < 16; y++) {
-//                for (int z = 15; z < 16; z++) {
-//                    world.chunk.set(x, y, z, VoxelType.BLOCK);
-//                }
-//            }
-//        }
+        world.randomize(1024);
+        chunks = world.getChunks();
     }
 
     @Override
     public void render() {
         ScreenUtils.clear(0.0f, 0.3f, 0.6f, 1f, true);
         modelBatch.begin(camera);
-        modelBatch.render(world.getChunk(), lights);
+        for (int i = 0; i < chunks.length; i++)
+            modelBatch.render(chunks[i], lights);
         modelBatch.end();
         controller.update();
     }
 
     @Override
-    public void resize (int width, int height) {
+    public void resize(int width, int height) {
         camera.viewportWidth = width;
         camera.viewportHeight = height;
         camera.update();

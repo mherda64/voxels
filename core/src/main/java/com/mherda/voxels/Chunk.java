@@ -112,7 +112,7 @@ public class Chunk implements RenderableProvider {
     }
 
     public void setFast(int x, int y, int z, VoxelType type) {
-        voxels[x + z * sX + y * widthTimesHeight] = type;
+        voxels[x + y * sX + z * widthTimesHeight] = type;
     }
 
     public boolean isDirty() {
