@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class Game extends ApplicationAdapter {
@@ -44,9 +46,6 @@ public class Game extends ApplicationAdapter {
         world = new World();
 //        world.randomize(1024);
         world.setFull();
-        world.set(16, 0, 0, VoxelType.NONE);
-        world.set(17, 0, 0, VoxelType.NONE);
-        world.set(18, 0, 0, VoxelType.NONE);
         chunks = world.getChunks();
     }
 
@@ -58,6 +57,19 @@ public class Game extends ApplicationAdapter {
             modelBatch.render(chunks[i], lights);
         modelBatch.end();
         controller.update();
+
+        camera.update();
+        Ray pickRay = camera.getPickRay(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+        Gdx.app.log("ray", pickRay.toString());
+
+        for (Chunk chunk : chunks) {
+            for (Voxel voxel : chunk.getVoxels()) {
+                if (!voxel.isNone() && Intersector.intersectRayBoundsFast(pickRay, voxel.box)) {
+                    Gdx.app.log("removed", String.format("%d %d %d", voxel.x, voxel.y, voxel.z));
+                    chunk.set(voxel.x, voxel.y, voxel.z, VoxelType.NONE);
+                }
+            }
+        }
     }
 
     @Override

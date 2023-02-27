@@ -6,9 +6,9 @@ import com.badlogic.gdx.math.Vector3;
 
 public class World {
 
-    private final int CHUNK_WIDTH = 16;
-    private final int CHUNK_HEIGHT = 32;
-    private final int WORLD_SIZE = 4;
+    private final int CHUNK_WIDTH = 4;
+    private final int CHUNK_HEIGHT = 4;
+    private final int WORLD_SIZE = 2;
 
     Chunk[] chunks;
 
@@ -60,7 +60,7 @@ public class World {
         chunks[x / CHUNK_WIDTH + z / CHUNK_WIDTH * WORLD_SIZE].set(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, z % CHUNK_WIDTH, type);
     }
 
-    public VoxelType get(int x, int y, int z) {
+    public Voxel get(int x, int y, int z) {
         return chunks[x / CHUNK_WIDTH + z / CHUNK_WIDTH * WORLD_SIZE].get(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, z % CHUNK_WIDTH);
     }
 }

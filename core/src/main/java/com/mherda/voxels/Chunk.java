@@ -10,6 +10,7 @@ import com.badlogic.gdx.graphics.g3d.RenderableProvider;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.math.collision.BoundingBox;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Pool;
 
@@ -17,7 +18,7 @@ public class Chunk implements RenderableProvider {
 
     private final int VERTEX_SIZE = 6;
 
-    final VoxelType[] voxels;
+    final Voxel[] voxels;
 
     final float[] vertices;
     int recentVerticesCount = 0;
@@ -48,9 +49,28 @@ public class Chunk implements RenderableProvider {
         this.widthTimesHeight = sX * sY;
         this.offset = offset;
 
-        voxels = new VoxelType[sX * sY * sZ];
-        for (int i = 0; i < sX * sY * sZ; i++) {
-            voxels[i] = VoxelType.NONE;
+        voxels = new Voxel[sX * sY * sZ];
+//        for (int i = 0; i < sX * sY * sZ; i++) {
+//            voxels[i] = new Voxel(
+//                VoxelType.NONE
+//            );
+//        }
+
+        for (int x = 0, i = 0; x < sX; x++) {
+            for (int y = 0; y < sY; y++) {
+                for (int z = 0; z < sZ; z++) {
+                    voxels[i++] = new Voxel(
+                        x,
+                        y,
+                        z,
+                        VoxelType.NONE,
+                        new BoundingBox(
+                            new Vector3(x + offset.x, y + offset.y, z + offset.z),
+                            new Vector3(x + offset.x + 1, y + offset.y + 1, z + offset.z + 1)
+                        )
+                    );
+                }
+            }
         }
 
         nextTopOffset = sX * sZ;
@@ -93,15 +113,19 @@ public class Chunk implements RenderableProvider {
         vertices = new float[VERTEX_SIZE * 4 * 6 * sX * sY * sZ];
     }
 
-    public VoxelType get(int x, int y, int z) {
-        if (x < 0 || x >= sX) return VoxelType.NONE;
-        if (y < 0 || y >= sY) return VoxelType.NONE;
-        if (z < 0 || z >= sZ) return VoxelType.NONE;
+    public Voxel get(int x, int y, int z) {
+        if (x < 0 || x >= sX) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
+        if (y < 0 || y >= sY) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
+        if (z < 0 || z >= sZ) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
         return getFast(x, y, z);
     }
 
-    public VoxelType getFast(int x, int y, int z) {
+    public Voxel getFast(int x, int y, int z) {
         return voxels[x + z * sX + y * widthTimesHeight];
+    }
+
+    public Voxel[] getVoxels() {
+        return voxels;
     }
 
     public void set(int x, int y, int z, VoxelType type) {
@@ -113,7 +137,7 @@ public class Chunk implements RenderableProvider {
     }
 
     public void setFast(int x, int y, int z, VoxelType type) {
-        voxels[x + y * sX + z * widthTimesHeight] = type;
+        voxels[x + y * sX + z * widthTimesHeight].setType(type);
     }
 
     public boolean isDirty() {
@@ -367,7 +391,7 @@ public class Chunk implements RenderableProvider {
     public void getRenderables(Array<Renderable> renderables, Pool<Renderable> pool) {
         if (isDirty()) {
             recentVerticesCount = calculateVertices(vertices);
-            Gdx.app.log("vertCount", String.valueOf(recentVerticesCount));
+//            Gdx.app.log("vertCount", String.valueOf(recentVerticesCount));
             setDirty(false);
             mesh.setVertices(vertices, 0, recentVerticesCount / 4 * 6 * VERTEX_SIZE);
         }
