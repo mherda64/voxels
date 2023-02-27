@@ -8,23 +8,17 @@ public class Voxel {
     VoxelType type;
     BoundingBox box;
 
-    int x, y, z;
+    Vec3 localPos;
+    Vec3 worldPos;
 
-    public Voxel(VoxelType type, BoundingBox box) {
+    public Voxel(int x, int y, int z, VoxelType type, Vec3 offset) {
+        this.localPos = new Vec3(x, y, z);
+        this.worldPos = new Vec3(x + offset.x, y + offset.y, z + offset.z);
         this.type = type;
-        this.box = box;
-    }
-
-    public Voxel(int x, int y, int z, VoxelType type, BoundingBox box) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.type = type;
-        this.box = box;
-    }
-
-    public Vector3 getPos() {
-        return new Vector3(x, y, z);
+        this.box = new BoundingBox(
+            new Vector3(worldPos.x, worldPos.y, worldPos.z),
+            new Vector3(worldPos.x + 1, worldPos.y + 1, worldPos.z + 1)
+        );
     }
 
     public boolean isNone() {

@@ -14,6 +14,8 @@ import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.ScreenUtils;
 
@@ -58,19 +60,33 @@ public class Game extends ApplicationAdapter {
             modelBatch.render(chunks[i], lights);
         modelBatch.end();
 
-        Ray pickRay = camera.getPickRay(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
-//        Gdx.app.log("ray", pickRay.toString());
-
-        for (Chunk chunk : chunks) {
-
-            if (Intersector.intersectRayBoundsFast(pickRay, chunk.box)) {
-                Gdx.app.log("Pointing at chunk", String.format("%s", chunk));
-                chunk.setFull(VoxelType.NONE);
-            }
-        }
-
         controller.update();
         camera.update();
+
+        Ray pickRay = camera.getPickRay(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
+        for (Chunk chunk : chunks) {
+            if (Intersector.intersectRayBoundsFast(pickRay, chunk.box)) {
+                Gdx.app.log("Pointing at chunk", String.format("%s", chunk));
+//                chunk.setFull(VoxelType.NONE);
+                for (Voxel voxel : chunk.getVoxels()) {
+                    if (Intersector.intersectRayBoundsFast(pickRay, voxel.box)) {
+                        Vec3 voxelPos = voxel.worldPos;
+                        // TODO Calc dist from center of the voxel
+                        double dist = Math.sqrt(
+                            (camera.position.x - voxelPos.x) * (camera.position.x - voxelPos.x) +
+                                (camera.position.y - voxelPos.y) * (camera.position.y - voxelPos.y) +
+                                (camera.position.z - voxelPos.z) * (camera.position.z - voxelPos.z)
+                        );
+                        Gdx.app.log("dist", String.format("%f %d %d %d", dist, voxelPos.x, voxelPos.y, voxelPos.z));
+
+                        if (dist < 1) {
+                            chunk.set(voxel.localPos.x, voxel.localPos.y, voxel.localPos.z, VoxelType.NONE);
+                        }
+                    }
+                }
+
+            }
+        }
     }
 
     @Override

@@ -8,7 +8,7 @@ public class World {
 
     private final int CHUNK_WIDTH = 4;
     private final int CHUNK_HEIGHT = 4;
-    private final int WORLD_SIZE = 4;
+    private final int WORLD_SIZE = 2;
 
     Chunk[] chunks;
 
@@ -21,7 +21,7 @@ public class World {
                     CHUNK_WIDTH,
                     CHUNK_HEIGHT,
                     CHUNK_WIDTH,
-                    new Vector3(x * CHUNK_WIDTH, 0, z * CHUNK_WIDTH)
+                    new Vec3(x * CHUNK_WIDTH, 0, z * CHUNK_WIDTH)
                 );
             }
         }

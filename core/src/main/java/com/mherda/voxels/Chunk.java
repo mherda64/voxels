@@ -35,7 +35,7 @@ public class Chunk implements RenderableProvider {
     final int sY;
     final int sZ;
     final int widthTimesHeight;
-    final Vector3 offset;
+    final Vec3 offset;
 
     final int nextTopOffset;
     final int nextBottomOffset;
@@ -44,7 +44,7 @@ public class Chunk implements RenderableProvider {
     final int nextLeftOffset;
     final int nextRightOffset;
 
-    public Chunk(int sX, int sY, int sZ, Vector3 offset) {
+    public Chunk(int sX, int sY, int sZ, Vec3 offset) {
         this.sX = sX;
         this.sY = sY;
         this.sZ = sZ;
@@ -61,10 +61,7 @@ public class Chunk implements RenderableProvider {
                         y,
                         z,
                         VoxelType.NONE,
-                        new BoundingBox(
-                            new Vector3(x + offset.x, y + offset.y, z + offset.z),
-                            new Vector3(x + offset.x + 1, y + offset.y + 1, z + offset.z + 1)
-                        )
+                        offset
                     );
                 }
             }
@@ -91,9 +88,8 @@ public class Chunk implements RenderableProvider {
         // Create indicies for the chunk mesh
         int len = sX * sY * sZ * VERTEX_SIZE * 2;
         short[] indices = new short[len];
-        int i = 0;
         short j = 0;
-        for (i = 0; i < len; i += 6, j += 4) {
+        for (int i = 0; i < len; i += 6, j += 4) {
             // First triangle
             indices[i] = j;
             indices[i + 1] = (short) (j + 1);
@@ -123,7 +119,7 @@ public class Chunk implements RenderableProvider {
     }
 
     public Voxel getFast(int x, int y, int z) {
-        return voxels[x + y * sX + z * widthTimesHeight];
+        return voxels[x + z * sX + y * widthTimesHeight];
     }
 
     public Voxel[] getVoxels() {
@@ -131,15 +127,15 @@ public class Chunk implements RenderableProvider {
     }
 
     public void set(int x, int y, int z, VoxelType type) {
-        if (x < 0 || x >= sX) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
-        if (y < 0 || y >= sY) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
-        if (z < 0 || z >= sZ) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
+        if (x < 0 || x > sX) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
+        if (y < 0 || y > sY) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
+        if (z < 0 || z > sZ) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
         setFast(x, y, z, type);
         setDirty(true);
     }
 
     public void setFast(int x, int y, int z, VoxelType type) {
-        voxels[x + y * sX + z * widthTimesHeight].setType(type);
+        voxels[x + z * sX + y * widthTimesHeight].setType(type);
     }
 
     public boolean isDirty() {
@@ -203,7 +199,7 @@ public class Chunk implements RenderableProvider {
         return vertexOffset / VERTEX_SIZE;
     }
 
-    private int createTop(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+    private int createTop(int x, int y, int z, Vec3 offset, float[] vertices, int vertexOffset) {
         vertices[vertexOffset++] = offset.x + x;
         vertices[vertexOffset++] = offset.y + y + 1;
         vertices[vertexOffset++] = offset.z + z;
@@ -234,7 +230,7 @@ public class Chunk implements RenderableProvider {
         return vertexOffset;
     }
 
-    private int createBottom(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+    private int createBottom(int x, int y, int z, Vec3 offset, float[] vertices, int vertexOffset) {
         vertices[vertexOffset++] = offset.x + x;
         vertices[vertexOffset++] = offset.y + y;
         vertices[vertexOffset++] = offset.z + z;
@@ -265,7 +261,7 @@ public class Chunk implements RenderableProvider {
         return vertexOffset;
     }
 
-    public static int createLeft(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+    public static int createLeft(int x, int y, int z, Vec3 offset, float[] vertices, int vertexOffset) {
         vertices[vertexOffset++] = offset.x + x;
         vertices[vertexOffset++] = offset.y + y;
         vertices[vertexOffset++] = offset.z + z;
@@ -296,7 +292,7 @@ public class Chunk implements RenderableProvider {
         return vertexOffset;
     }
 
-    public static int createRight(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+    public static int createRight(int x, int y, int z, Vec3 offset, float[] vertices, int vertexOffset) {
         vertices[vertexOffset++] = offset.x + x + 1;
         vertices[vertexOffset++] = offset.y + y;
         vertices[vertexOffset++] = offset.z + z;
@@ -327,7 +323,7 @@ public class Chunk implements RenderableProvider {
         return vertexOffset;
     }
 
-    public static int createFront(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+    public static int createFront(int x, int y, int z, Vec3 offset, float[] vertices, int vertexOffset) {
         vertices[vertexOffset++] = offset.x + x;
         vertices[vertexOffset++] = offset.y + y;
         vertices[vertexOffset++] = offset.z + z;
@@ -358,7 +354,7 @@ public class Chunk implements RenderableProvider {
         return vertexOffset;
     }
 
-    public static int createBack(int x, int y, int z, Vector3 offset, float[] vertices, int vertexOffset) {
+    public static int createBack(int x, int y, int z, Vec3 offset, float[] vertices, int vertexOffset) {
         vertices[vertexOffset++] = offset.x + x;
         vertices[vertexOffset++] = offset.y + y;
         vertices[vertexOffset++] = offset.z + z + 1;
