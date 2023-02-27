@@ -83,8 +83,8 @@ public class Chunk implements RenderableProvider {
         }
 
         mesh = new Mesh(true,
-            sX * sY * sZ * VERTEX_SIZE * 4,
-            sX * sY * sZ * VERTEX_SIZE * 6 ,
+            sX * sY * sZ * VERTEX_SIZE * 4 * 4,
+            sX * sY * sZ * VERTEX_SIZE * 6 * 6,
             VertexAttribute.Position(),
             VertexAttribute.Normal());
         mesh.setIndices(indices);
@@ -109,6 +109,7 @@ public class Chunk implements RenderableProvider {
         if (y < 0 || y >= sY) return;
         if (z < 0 || z >= sZ) return;
         setFast(x, y, z, type);
+        setDirty(true);
     }
 
     public void setFast(int x, int y, int z, VoxelType type) {
@@ -117,6 +118,10 @@ public class Chunk implements RenderableProvider {
 
     public boolean isDirty() {
         return dirty;
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 
     public int calculateVertices(float[] vertices) {
@@ -363,7 +368,7 @@ public class Chunk implements RenderableProvider {
         if (isDirty()) {
             recentVerticesCount = calculateVertices(vertices);
             Gdx.app.log("vertCount", String.valueOf(recentVerticesCount));
-            dirty = false;
+            setDirty(false);
             mesh.setVertices(vertices, 0, recentVerticesCount / 4 * 6 * VERTEX_SIZE);
         }
 

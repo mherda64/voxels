@@ -37,12 +37,16 @@ public class Game extends ApplicationAdapter {
         Gdx.input.setInputProcessor(controller);
 
         lights = new Environment();
-        lights.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.4f, 0.4f, 0.4f, 1.f));
-        lights.add(new DirectionalLight().set(0.8f, 0.8f, 0.8f, -0.8f, 0, 0));
+        lights.set(new ColorAttribute(ColorAttribute.AmbientLight, 0.5f, 0.5f, 0.5f, 1.f));
         lights.add(new DirectionalLight().set(1, 1, 1, 0, -1f, 0));
+        lights.add(new DirectionalLight().set(1, 1, 1, 0, 0, 1f));
 
         world = new World();
-        world.randomize(1024);
+//        world.randomize(1024);
+        world.setFull();
+        world.set(16, 0, 0, VoxelType.NONE);
+        world.set(17, 0, 0, VoxelType.NONE);
+        world.set(18, 0, 0, VoxelType.NONE);
         chunks = world.getChunks();
     }
 

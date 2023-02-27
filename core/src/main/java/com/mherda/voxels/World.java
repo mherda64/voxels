@@ -15,8 +15,8 @@ public class World {
     public World() {
         chunks = new Chunk[WORLD_SIZE * WORLD_SIZE];
 
-        for (int x = 0, i = 0; x < WORLD_SIZE; x++) {
-            for (int z = 0; z < WORLD_SIZE; z++) {
+        for (int z = 0, i = 0; z < WORLD_SIZE; z++) {
+            for (int x = 0; x < WORLD_SIZE; x++) {
                 chunks[i++] = new Chunk(
                     CHUNK_WIDTH,
                     CHUNK_HEIGHT,
@@ -42,6 +42,25 @@ public class World {
                 );
             }
         }
+    }
 
+    public void setFull() {
+        for (Chunk chunk: chunks) {
+            for (int x = 0; x < chunk.sX; x++) {
+                for (int y = 0; y < chunk.sY; y++) {
+                    for (int z = 0; z < chunk.sZ; z++) {
+                        chunk.set(x, y, z, VoxelType.BLOCK);
+                    }
+                }
+            }
+        }
+    }
+
+    public void set(int x, int y, int z, VoxelType type) {
+        chunks[x / CHUNK_WIDTH + z / CHUNK_WIDTH * WORLD_SIZE].set(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, z % CHUNK_WIDTH, type);
+    }
+
+    public VoxelType get(int x, int y, int z) {
+        return chunks[x / CHUNK_WIDTH + z / CHUNK_WIDTH * WORLD_SIZE].get(x % CHUNK_WIDTH, y % CHUNK_HEIGHT, z % CHUNK_WIDTH);
     }
 }
