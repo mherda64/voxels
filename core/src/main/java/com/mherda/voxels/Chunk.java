@@ -25,6 +25,8 @@ public class Chunk implements RenderableProvider {
 
     final Mesh mesh;
 
+    final BoundingBox box;
+
     final Material material;
 
     boolean dirty = true;
@@ -50,15 +52,10 @@ public class Chunk implements RenderableProvider {
         this.offset = offset;
 
         voxels = new Voxel[sX * sY * sZ];
-//        for (int i = 0; i < sX * sY * sZ; i++) {
-//            voxels[i] = new Voxel(
-//                VoxelType.NONE
-//            );
-//        }
 
-        for (int x = 0, i = 0; x < sX; x++) {
+        for (int z = 0, i = 0; z < sZ; z++) {
             for (int y = 0; y < sY; y++) {
-                for (int z = 0; z < sZ; z++) {
+                for (int x = 0; x < sX; x++) {
                     voxels[i++] = new Voxel(
                         x,
                         y,
@@ -84,6 +81,11 @@ public class Chunk implements RenderableProvider {
             MathUtils.random(0.5f, 1f),
             MathUtils.random(0.5f, 1f),
             MathUtils.random(0.5f, 1f), 1)
+        );
+
+        box = new BoundingBox(
+            new Vector3(offset.x, offset.y, offset.z),
+            new Vector3(offset.x + sX, offset.y + sY, offset.z + sZ)
         );
 
         // Create indicies for the chunk mesh
@@ -121,7 +123,7 @@ public class Chunk implements RenderableProvider {
     }
 
     public Voxel getFast(int x, int y, int z) {
-        return voxels[x + z * sX + y * widthTimesHeight];
+        return voxels[x + y * sX + z * widthTimesHeight];
     }
 
     public Voxel[] getVoxels() {
@@ -129,9 +131,9 @@ public class Chunk implements RenderableProvider {
     }
 
     public void set(int x, int y, int z, VoxelType type) {
-        if (x < 0 || x >= sX) return;
-        if (y < 0 || y >= sY) return;
-        if (z < 0 || z >= sZ) return;
+        if (x < 0 || x >= sX) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
+        if (y < 0 || y >= sY) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
+        if (z < 0 || z >= sZ) throw new IllegalStateException(String.format("Tried to access (%d, %d, %d) voxel in chunk", x, y, z));
         setFast(x, y, z, type);
         setDirty(true);
     }
@@ -404,6 +406,16 @@ public class Chunk implements RenderableProvider {
             renderable.meshPart.size = recentVerticesCount / 4 * 6 * VERTEX_SIZE;
             renderable.meshPart.primitiveType = GL20.GL_TRIANGLES;
             renderables.add(renderable);
+        }
+    }
+
+    public void setFull(VoxelType type) {
+        for (int x = 0; x < sX; x++) {
+            for (int y = 0; y < sY; y++) {
+                for (int z = 0; z < sZ; z++) {
+                    set(x, y, z, type);
+                }
+            }
         }
     }
 }

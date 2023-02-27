@@ -1,5 +1,6 @@
 package com.mherda.voxels;
 
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.BoundingBox;
 
 public class Voxel {
@@ -20,6 +21,10 @@ public class Voxel {
         this.z = z;
         this.type = type;
         this.box = box;
+    }
+
+    public Vector3 getPos() {
+        return new Vector3(x, y, z);
     }
 
     public boolean isNone() {

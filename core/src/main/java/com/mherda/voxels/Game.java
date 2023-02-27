@@ -2,15 +2,17 @@ package com.mherda.voxels;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
-import com.badlogic.gdx.graphics.g3d.Environment;
-import com.badlogic.gdx.graphics.g3d.ModelBatch;
+import com.badlogic.gdx.graphics.VertexAttributes;
+import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.shaders.DefaultShader;
 import com.badlogic.gdx.graphics.g3d.utils.DefaultShaderProvider;
 import com.badlogic.gdx.graphics.g3d.utils.FirstPersonCameraController;
+import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.collision.Ray;
 import com.badlogic.gdx.utils.ScreenUtils;
@@ -20,7 +22,6 @@ public class Game extends ApplicationAdapter {
     PerspectiveCamera camera;
     Environment lights;
     FirstPersonCameraController controller;
-
     World world;
     Chunk[] chunks;
 
@@ -35,7 +36,7 @@ public class Game extends ApplicationAdapter {
         camera.near = 0.1f;
         camera.far = 500;
         controller = new FirstPersonCameraController(camera);
-        controller.setVelocity(50f);
+//        controller.setVelocity(50f);
         Gdx.input.setInputProcessor(controller);
 
         lights = new Environment();
@@ -56,20 +57,20 @@ public class Game extends ApplicationAdapter {
         for (int i = 0; i < chunks.length; i++)
             modelBatch.render(chunks[i], lights);
         modelBatch.end();
-        controller.update();
 
-        camera.update();
         Ray pickRay = camera.getPickRay(Gdx.graphics.getWidth() / 2, Gdx.graphics.getHeight() / 2);
-        Gdx.app.log("ray", pickRay.toString());
+//        Gdx.app.log("ray", pickRay.toString());
 
         for (Chunk chunk : chunks) {
-            for (Voxel voxel : chunk.getVoxels()) {
-                if (!voxel.isNone() && Intersector.intersectRayBoundsFast(pickRay, voxel.box)) {
-                    Gdx.app.log("removed", String.format("%d %d %d", voxel.x, voxel.y, voxel.z));
-                    chunk.set(voxel.x, voxel.y, voxel.z, VoxelType.NONE);
-                }
+
+            if (Intersector.intersectRayBoundsFast(pickRay, chunk.box)) {
+                Gdx.app.log("Pointing at chunk", String.format("%s", chunk));
+                chunk.setFull(VoxelType.NONE);
             }
         }
+
+        controller.update();
+        camera.update();
     }
 
     @Override

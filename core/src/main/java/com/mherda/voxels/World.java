@@ -8,7 +8,7 @@ public class World {
 
     private final int CHUNK_WIDTH = 4;
     private final int CHUNK_HEIGHT = 4;
-    private final int WORLD_SIZE = 2;
+    private final int WORLD_SIZE = 4;
 
     Chunk[] chunks;
 
@@ -46,13 +46,7 @@ public class World {
 
     public void setFull() {
         for (Chunk chunk: chunks) {
-            for (int x = 0; x < chunk.sX; x++) {
-                for (int y = 0; y < chunk.sY; y++) {
-                    for (int z = 0; z < chunk.sZ; z++) {
-                        chunk.set(x, y, z, VoxelType.BLOCK);
-                    }
-                }
-            }
+            chunk.setFull(VoxelType.BLOCK);
         }
     }
 
